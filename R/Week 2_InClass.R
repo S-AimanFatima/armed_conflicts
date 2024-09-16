@@ -21,6 +21,9 @@ df_long <- subset %>%
                values_to = "MatMor") %>%  # Rename the values to 'MatMor'
   mutate(Year = as.numeric(Year))  # Convert 'Year' to numeric
 
+#save output
+write.csv(df_long, here("Data", "cleandata.csv"), row.names = FALSE)
+
 #Introduce Git
 
 install.packages("usethis")
@@ -33,4 +36,6 @@ usethis::git_sitrep()
 
 usethis::use_git()
 usethis::create_github_token()
+gitcreds::gitcreds_set()
+
 usethis::use_github()
