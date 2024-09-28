@@ -6,10 +6,10 @@ library(here)
 library(tidyverse)
 
 #read in external data
-rawdat <- read.csv(here("Original", "disaster.csv"), 
-                   header = TRUE)
+disaster <- read.csv(here("Original", "disaster.csv"), 
+                     header = TRUE)
 
-filtered_data <- rawdat %>%
+filtered_data <- disaster %>%
   filter(Year >= 2000 & Year <= 2019, 
          Disaster.Type %in% c("Earthquake", "Drought"))
 
@@ -22,10 +22,12 @@ data_with_dummies <- subset_data %>%
     earthquake = ifelse(Disaster.Type == "Earthquake", 1, 0)
   )
 
-summarized_data <- data_with_dummies %>%
+disastersdata <- data_with_dummies %>%
   group_by(Year, ISO) %>%
   summarize(
     drought = max(drought, na.rm = TRUE),
     earthquake = max(earthquake, na.rm = TRUE),
     .groups = 'drop'
   )
+
+#save(disasters, file = here("data", "disasters.Rda"))
