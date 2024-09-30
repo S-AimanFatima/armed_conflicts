@@ -51,3 +51,7 @@ library(countrycode)
 mortdata$ISO <- countrycode(mortdata$Country.Name,
                                origin = "country.name",
                                destination = "iso3c")
+
+#remove country.name variable
+mortdata <- mortdata %>%
+  dplyr::select(-Country.Name)
