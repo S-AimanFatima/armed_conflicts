@@ -2,13 +2,13 @@
 #Name: Syeda Aiman Fatima
 #Date: September 23, 2024
 
-covs <- read.csv(here("original", "covariates.csv"), header = TRUE)
-
-covs <- covs %>% rename(Year = year)
-
 source(here("R", "prepare_mortality.R"))
 source(here("R", "prepare_disaster.R"))
 source(here("R", "prepare_conflict.R"))
+
+covs <- read.csv(here("original", "covariates.csv"), header = TRUE)
+
+covs <- covs %>% rename(Year = year)
 
 #put all data frames into list
 alllist <- list(confdata, mortdata, disastersdata)

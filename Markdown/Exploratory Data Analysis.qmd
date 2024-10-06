@@ -1,0 +1,186 @@
+---
+title: "Week 4 In-Class: Exploratory Data Analysis"
+author: "Syeda Aiman Fatima"
+format: pdf
+editor: visual
+embed-resources: true
+---
+
+```{r}
+#| label: load packages
+#| include: false
+library(here)
+library(tidyverse)
+library(ggplot2)
+library(tinytex)
+
+```
+
+```{r}
+#Check final data variables
+finaldata <- read.csv(here("Data", "finaldata.csv"), header = TRUE)
+names(finaldata)
+```
+
+```{r}
+#Check observations from Canada
+
+finaldata %>%
+dplyr::filter(country_name == "Canada")
+
+#Check observations from Ecuador
+
+finaldata %>%
+dplyr::filter(country_name == "Ecuador")
+```
+
+```{r}
+summary(finaldata)
+
+#missing data
+sapply(finaldata, function(x) sum(is.na(x)))
+
+#Identify countries with 20 missing values
+
+missing_summary <- finaldata %>%
+    select(country_name, ISO, Year, 
+           popdens, urban, male_edu, temp, 
+           rainfall1000, Infant_Mortality, 
+           Neonatal_Mortality, Under5_Mortality) %>%
+    mutate(popdens_missing = is.na(popdens),
+           urban_missing = is.na(urban),
+           male_edu_missing = is.na(male_edu),
+           temp_missing = is.na(temp),
+           rainfall1000_missing = is.na(rainfall1000),
+           Infant_Mortality_missing = is.na(Infant_Mortality),
+           Neonatal_Mortality_missing = is.na(Neonatal_Mortality),
+           Under5_Mortality_missing = is.na(Under5_Mortality)) %>%
+    filter(popdens_missing | urban_missing | male_edu_missing | 
+           temp_missing | rainfall1000_missing | 
+           Infant_Mortality_missing | Neonatal_Mortality_missing | 
+           Under5_Mortality_missing) %>%
+    select(country_name, ISO, Year, 
+           popdens_missing, urban_missing, 
+           male_edu_missing, temp_missing, 
+           rainfall1000_missing, Infant_Mortality_missing, 
+           Neonatal_Mortality_missing, Under5_Mortality_missing)
+
+```
+
+Missing data identified for all the variables. 20 missing values for each of the following variables: popdens, urban, male_edu, temp, rainfall1000, infant mortality, neonatal mortality, under5 mortality. In comparison, the variable gdp1000 has 62 missing values and maternal mortality has 426 missing values.
+
+On further investigation, Cote d'Ivoire is the country with 20 missing values for the following variables: popdens, urban, male_edu, temp, & rainfall1000 from year 2000 to 2019. Puerto Rico is missing 20 values for infant, neonatal & under5 mortality from years 2000 to 2019.
+
+```{r}
+#Visualize distributions of mortality rates 
+
+ggplot(finaldata, aes(x=Maternal_Mortality)) + 
+  geom_histogram(binwidth=50) + 
+  theme_minimal() + 
+  labs(title="Distribution of Maternal Mortality")
+
+ggplot(finaldata, aes(x=Infant_Mortality)) + 
+  geom_histogram(binwidth=10) + 
+  theme_minimal() + 
+  labs(title="Distribution of Infant Mortality")
+
+ggplot(finaldata, aes(x=Neonatal_Mortality)) + 
+  geom_histogram(binwidth=5) + 
+  theme_minimal() + 
+  labs(title="Distribution of Neonatal Mortality")
+
+ggplot(finaldata, aes(x=Under5_Mortality)) + 
+  geom_histogram(binwidth=5) + 
+  theme_minimal() + 
+  labs(title="Distribution of Under 5 Mortality")
+```
+
+```{r}
+#Visualize mortality trends 2000-2019
+
+#Maternal Mortality 
+
+finaldata %>%
+  ggplot(aes(x = Year, y = Maternal_Mortality, group = ISO)) +
+  geom_line(color = "skyblue") +
+  xlim(c(2000,2019)) +
+  labs(y = "Maternal mortality", x = "Year") + 
+  theme_bw()
+
+#Infant Mortality 
+
+finaldata %>%
+  ggplot(aes(x = Year, y = Infant_Mortality, group = ISO)) +
+  geom_line(color = "skyblue") +
+  xlim(c(2000,2019)) +
+  labs(y = "Infant mortality", x = "Year") + 
+  theme_bw()
+
+#Neonatal Mortality
+
+finaldata %>%
+  ggplot(aes(x = Year, y = Neonatal_Mortality, group = ISO)) +
+  geom_line(color = "skyblue") +
+  xlim(c(2000,2019)) +
+  labs(y = "Neonatal mortality", x = "Year") + 
+  theme_bw()
+
+#Under 5 Mortality
+
+finaldata %>%
+  ggplot(aes(x = Year, y = Under5_Mortality, group = ISO)) +
+  geom_line(color = "skyblue") +
+  xlim(c(2000,2019)) +
+  labs(y = "Under 5 mortality", x = "Year") + 
+  theme_bw()
+
+
+```
+
+The infant mortality trend graph shows a steep peak in mortality from 2009 to 2010 followed by a steep decline from 2010 to 2011. No discernible pattern for neonatal mortality. Similar peak and decline noticed for under 5 mortality as the infant mortality graph.
+
+```{r}
+#Visualize mortality trends by armed conflict status
+
+#Maternal Mortality
+
+finaldata %>%
+  ggplot(aes(x = Year, y = Maternal_Mortality, group = ISO)) +
+  geom_line(aes(color = as.factor(armconf1)), alpha = 0.5) +
+  xlim(c(2000,2019)) +
+  scale_y_continuous(trans='log10') + 
+  labs(y = "Maternal mortality", x = "Year", color = "Armed conflict") + 
+  theme_bw()
+
+#Infant Mortality
+
+finaldata %>%
+  ggplot(aes(x = Year, y = Infant_Mortality, group = ISO)) +
+  geom_line(aes(color = as.factor(armconf1)), alpha = 0.5) +
+  xlim(c(2000,2019)) +
+  scale_y_continuous(trans='log10') + 
+  labs(y = "Infant mortality", x = "Year", color = "Armed conflict") + 
+  theme_bw()
+
+#Under 5 Mortality
+
+finaldata %>%
+  ggplot(aes(x = Year, y = Under5_Mortality, group = ISO)) +
+  geom_line(aes(color = as.factor(armconf1)), alpha = 0.5) +
+  xlim(c(2000,2019)) +
+  scale_y_continuous(trans='log10') + 
+  labs(y = "Under 5 mortality", x = "Year", color = "Armed conflict") + 
+  theme_bw()
+
+#Neonatal Mortality
+
+finaldata %>%
+  ggplot(aes(x = Year, y = Neonatal_Mortality, group = ISO)) +
+  geom_line(aes(color = as.factor(armconf1)), alpha = 0.5) +
+  xlim(c(2000,2019)) +
+  scale_y_continuous(trans='log10') + 
+  labs(y = "Neonatal mortality", x = "Year", color = "Armed conflict") + 
+  theme_bw()
+```
+
+Similar trends observed for all 4 mortality outcomes, the highest mortality rates are observed where armed conflict is present.
