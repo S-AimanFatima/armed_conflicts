@@ -1,0 +1,83 @@
+---
+title: "Table 1"
+author: "Syeda Aiman Fatima"
+format: pdf
+editor: visual
+embed-resources: true
+---
+
+```{r}
+#| label: load packages
+#| include: false
+library(here)
+library(tidyverse)
+library(ggplot2)
+library(gtsummary)
+```
+
+```{r}
+#| echo: FALSE
+finaldata <- read.csv(here("Data", "finaldata.csv"), header = TRUE)
+
+```
+
+```{r}
+#| echo: FALSE
+#Create a new variable for armed conflict in 2000
+
+data2 <- finaldata %>%
+  group_by(country_name) %>%
+  mutate(armed_conflict_2000 = ifelse(Year == 2000 & armconf1 == 1, "Yes", "No"))%>%
+  ungroup()
+
+# Filter data for 2000
+
+data_2000 <- data2 %>%
+  filter(Year == 2000)
+
+#Convert categorical variables to factors with labels Yes/No
+
+data_2000 <- data_2000 %>%
+  mutate(
+    OECD2023 = factor(OECD2023, levels = c(0, 1), labels = c("No", "Yes")),
+    drought = factor(drought, levels = c(0, 1), labels = c("No", "Yes")),
+    earthquake = factor(earthquake, levels = c(0, 1), labels = c("No", "Yes"))
+  )
+
+```
+
+```{r}
+#| echo: FALSE
+#create Table 1
+
+Table1 <- data_2000 %>%
+  select(gdp1000, OECD2023, popdens, urban, agedep, male_edu, temp, rainfall1000, drought, earthquake, armed_conflict_2000) %>%
+  tbl_summary(by = armed_conflict_2000,
+              statistic = list(
+      all_continuous() ~ "{median} [{min}, {max}]",
+      all_categorical() ~ "{n} ({p}%)"
+    ),
+    missing = "always",
+    missing_text = "Missing",
+    digits = all_continuous() ~ 2,
+              type   = all_categorical() ~ "categorical", 
+              label = list(gdp1000 ~ "GDP per capita (USD)",
+                           OECD2023 ~ "OECD",
+                           popdens ~ "Population density",
+                           urban ~ "Urban residence",
+                           agedep ~ "Age dependency ratio",
+                           male_edu ~ "Male education",
+                           temp ~ "Mean annual temperature",
+                           rainfall1000 ~ "Mean annual rainfall",
+                           drought ~ "Drought", earthquake ~ "Earthquake")) %>%
+  add_overall() %>%
+  modify_header(all_stat_cols() ~ "**{level}** (N={n})") %>%
+  modify_spanning_header(all_stat_cols() ~ "**Armed Conflict in 2000**") %>%
+  bold_labels()
+```
+
+```{r}
+#| echo: FALSE
+#| message: FALSE
+Table1
+```
