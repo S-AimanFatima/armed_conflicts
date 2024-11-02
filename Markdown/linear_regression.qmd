@@ -1,0 +1,145 @@
+---
+title: "Linear Regression"
+format: pdf
+embed-resources: true
+editor: visual
+---
+
+```{r}
+#| label: load-packages
+#| include: false
+
+library(here)
+library(tidyverse)
+library(kableExtra)
+library(texreg)
+library(plm)
+```
+
+```{r}
+#| echo: FALSE
+#| include: false
+##read in data
+
+data <- read.csv(here("Data", "finaldata.csv"), header = TRUE)
+```
+
+```{r}
+#| echo: FALSE
+#| include: false
+## Linear regression
+
+#Fixed effects model with country
+
+lmmod <- lm(Maternal_Mortality ~ -1 + armconf1 + gdp1000 + OECD + popdens + urban +
+              agedep + male_edu + temp + rainfall1000 + earthquake + drought +
+              ISO, 
+            data = data)
+
+plmmod <- plm(Maternal_Mortality ~ armconf1 + gdp1000 + OECD + popdens + urban +
+                agedep + male_edu + temp + rainfall1000 + earthquake + drought,
+              index = c("ISO"), model = "within", data = data)
+
+screenreg(list(lmmod, plmmod))
+```
+
+```{r}
+#| echo: FALSE
+#| include: false
+#Fixed effects for Country and Year (time)
+
+matmormod <- lm(Maternal_Mortality ~ -1 + armconf1 + gdp1000 + OECD + popdens + urban +
+                  agedep + male_edu + temp + rainfall1000 + earthquake + drought +
+                  ISO + as.factor(Year), data = data)
+
+matmorplm <- plm(Maternal_Mortality ~ -1 + armconf1 + gdp1000 + OECD + popdens + urban +
+                agedep + male_edu + temp + rainfall1000 + earthquake + drought,
+                index = c("ISO", "Year"),
+                effect = "twoways",
+                model = "within",
+                data = data)
+
+screenreg(list(matmormod, matmorplm))
+```
+
+```{r}
+#| echo: FALSE
+#| include: false
+#Log transformation of GDP
+
+data$log_GDP <- log(data$gdp1000)
+
+matmormod <- lm(Maternal_Mortality ~ -1 + armconf1 + log_GDP + OECD + popdens + urban +
+                  agedep + male_edu + temp + rainfall1000 + earthquake + drought +
+                  ISO + as.factor(Year), data = data)
+
+matmorplm <- plm(Maternal_Mortality ~ -1 + armconf1 + log_GDP + OECD + popdens + urban +
+                agedep + male_edu + temp + rainfall1000 + earthquake + drought,
+                index = c("ISO", "Year"),
+                effect = "twoways",
+                model = "within",
+                data = data)
+
+screenreg(list(matmormod, matmorplm))
+```
+
+```{r}
+#| echo: FALSE
+#| include: false
+#models for other outcomes
+
+preds <- as.formula(" ~ armconf1 + gdp1000 + OECD + popdens + urban + 
+                  agedep + male_edu + temp + rainfall1000 + earthquake + drought + 
+                  ISO + as.factor(Year)")
+
+matmormod <- lm(update.formula(preds, Maternal_Mortality ~ .), data = data)
+un5mormod <- lm(update.formula(preds, Under5_Mortality ~ .), data = data)
+infmormod <- lm(update.formula(preds, Infant_Mortality ~ .), data = data)
+neomormod <- lm(update.formula(preds, Neonatal_Mortality ~ .), data = data)
+```
+
+```{r}
+#| echo: FALSE
+#| include: false
+preds <- as.formula(" ~ armconf1 + log_GDP + OECD + popdens + urban + 
+                  agedep + male_edu + temp + rainfall1000 + earthquake + drought + 
+                  ISO + as.factor(Year)")
+
+matmormod <- plm(update.formula(preds, Maternal_Mortality ~ .), index = c("ISO", "Year"), effect = "twoways", model = "within", data = data)
+un5mormod <- plm(update.formula(preds, Under5_Mortality ~ .),index = c("ISO", "Year"), effect = "twoways", model = "within", data = data)
+infmormod <- plm(update.formula(preds, Infant_Mortality ~ .), index = c("ISO", "Year"), effect = "twoways", model = "within", data = data)
+neomormod <- plm(update.formula(preds, Neonatal_Mortality ~ .), index = c("ISO", "Year"), effect = "twoways", model = "within", data = data)
+
+screenreg(list(matmormod, un5mormod, infmormod, neomormod))
+```
+
+```{r}
+#| echo: FALSE
+#| include: false
+#create table
+
+
+#| output: asis
+
+keepvars <- list("armconf1" = "Armed conflict",
+                 "log_GDP" = "log(GDP)",
+                 "OECD" = "OECD",
+                 "popdens" = "Population density",
+                 "urban" = "Urban",
+                 "agedep" = "Age dependency",
+                 "male_edu" = "Male education",
+                 "temp" = "Average temperature",
+                 "rainfall" = "Average rainfall",
+                 "earthquake" = "Earthquake",
+                 "drought" = "Drought")
+
+```
+
+```{r}
+#| echo: FALSE
+screenreg(list(matmormod, un5mormod, infmormod, neomormod), 
+        ci.force = TRUE,
+        custom.coef.map = keepvars,
+        custom.model.names = c("Maternal mortality", "Under-5 mortality",
+                               "Infant mortality", "Neonatal mortality"))
+```
